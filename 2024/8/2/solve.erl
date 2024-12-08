@@ -1,0 +1,57 @@
+-module(solve).
+-export([main/0]).
+
+-define(NTH(Matrix, X, Y), lists:nth(X, lists:nth(Y, Matrix))).
+-define(WIDTH(Matrix), length(lists:nth(1, Matrix))).
+-define(HEIGHT(Matrix), length(Matrix)).
+
+
+% This is not very effecient but I can't be bothered to optimize it
+populate_map(Matrix, _, Y, Map) when length(Matrix) < Y  -> maps:filter(fun (_, Val) -> length(Val) > 1 end, Map);
+populate_map([Row | Matrix], X, Y, Map) when length(Row) < X -> populate_map([Row | Matrix], 1, Y+1, Map);
+populate_map(Matrix, X, Y, Map) -> case ?NTH(Matrix, X, Y) of
+                                      $. -> populate_map(Matrix, X+1, Y, Map);
+                                       _ -> populate_map(Matrix, X+1, Y, maps:put(
+                                                                              ?NTH(Matrix, X, Y),
+                                                                              [{X, Y} | maps:get(?NTH(Matrix, X, Y),  Map, [])],
+                                                                              Map
+                                                                             ))
+                                   end.
+
+populate_map(Matrix) -> populate_map(Matrix, 1, 1, maps:new()).
+
+% Neither is this
+twocombs(List) -> lists:uniq([{lists:min([L1, L2]), lists:max([L1, L2])} || L1 <- List, L2 <- List, L1 /= L2]).
+
+dist({X1, Y1}, {X2, Y2}) -> {X2-X1, Y2-Y1}.
+
+get_anti_helper({X, Y}, {XDist, YDist}, Width, Height, Op) ->
+    New = case Op of
+              minus -> {X - XDist, Y - YDist};
+              plus -> {X + XDist, Y + YDist}
+          end,
+    case filter_fun(New, Width, Height) of
+        true -> [New | get_anti_helper(New, {XDist, YDist}, Width, Height, Op)];
+        false -> []
+    end.
+
+get_anti(TwoCombs, Width, Height) ->
+    Foo = fun ({Point1, Point2}) ->
+                  Dist = dist(Point1, Point2),
+                  [get_anti_helper(Point1, Dist, Width, Height, minus), get_anti_helper(Point2, Dist, Width, Height, plus)]
+          end,
+    lists:flatten(lists:map(Foo, TwoCombs)).
+
+filter_fun({X, Y}, Width, Height) when (X < 1) or (Y < 1) or (Width < X) or (Height < Y) -> false;
+filter_fun(_, _, _) -> true.
+
+main() ->
+    Matrix = string:lexemes(lists:flatten(help:stdin()), [$\n]),
+    Antennnas = populate_map(Matrix),
+    TwoCombs = lists:flatmap(fun ({_, Val}) -> twocombs(Val) end, maps:to_list(Antennnas)), 
+    Anti = lists:filter(
+             fun (Tup) -> filter_fun(Tup, ?WIDTH(Matrix), ?HEIGHT(Matrix)) end,
+             get_anti(TwoCombs, ?WIDTH(Matrix), ?HEIGHT(Matrix))
+            ),
+    io:format("~p\n", [length(lists:uniq(Anti ++ lists:flatten(maps:values(Antennnas))))]),
+    halt().

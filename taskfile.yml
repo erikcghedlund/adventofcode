@@ -1,0 +1,55 @@
+version: '3'
+
+dotenv: ['.env']
+
+tasks:
+  read:
+    cmds:
+      - |
+        curl "https://adventofcode.com/$YEAR/day/$DAY" --compressed -H "Cookie: session=$SESSION_ID" | pandoc -f html -t plain
+  input:
+    cmds:
+      - |
+        curl "https://adventofcode.com/$YEAR/day/$DAY/input" --compressed -H "Cookie: session=$SESSION_ID" -s
+  leaderboard:
+    cmds:
+      - |
+        curl "https://adventofcode.com/$YEAR/leaderboard/private/view/4252803?order=stars" --compressed -H "Cookie: session=$SESSION_ID" -s | pandoc -f html -t plain | pcregrep -Mo "\d+\).+" mine.txt | tr -d '*************************' | tac | fzf    
+  solve:
+    deps:
+      [build-helpers, build-solve]
+    cmds:
+      - defer: { task: cleanup }
+      - go-task --silent input | erl -pa "./$YEAR/$DAY/$PART" -pa "./2024/helpers" -noshell -s solve main
+  template:
+    status:
+      - test -f "./$YEAR/$DAY/$PART/solve.erl"
+    cmds:
+      - mkdir -p "./$YEAR/$DAY/$PART"
+      - echo '-module(solve).\n-export([main/0]).\n' > "./$YEAR/$DAY/$PART/solve.erl"
+  test-example:
+    deps: [build-helpers, build-solve]
+    cmds:
+      - defer: { task: cleanup }
+      -  erl -pa "./$YEAR/$DAY/$PART" -pa "./2024/helpers" -noshell -s solve main < "./$YEAR/$DAY/1/example.txt"
+  submit:
+    cmds:
+      - |
+        curl "https://adventofcode.com/$YEAR/day/$DAY/answer" --compressed -H "Cookie: session=$SESSION_ID" -s --data-raw "level=$PART&answer=$(go-task solve --silent)"
+  build-helpers:
+    sources:
+    - ./2024/helpers/help.erl
+    generates:
+    - ./2024/helpers/help.beam
+    cmds:
+    - erlc -o ./2024/helpers/help.beam ./2024/helpers/help.erl
+  build-solve:
+    sources:
+    - ./$YEAR/$DAY/$PART/solve.erl
+    generates:
+    - ./$YEAR/$DAY/$PART/solve.beam
+    cmds:
+    - erlc -o ./$YEAR/$DAY/$PART/solve.beam ./$YEAR/$DAY/$PART/solve.erl
+  cleanup:
+    cmds:
+      - rm $(find . -name '*.beam')
