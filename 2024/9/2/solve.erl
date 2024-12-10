@@ -11,10 +11,6 @@ populate_fs([{Index, Int} | Tail]) when ?ODD(Index) ->
 populate_fs([{Index, Int} | Tail]) ->
     lists:duplicate(Int, (Index div 2)) ++ populate_fs(Tail).
 
-isempty(empty) -> true;
-isempty(_) -> false.
-notempty(X) -> not isempty(X).
-
 filter_fun({empty, _}) -> false;
 filter_fun({X, _}) -> {true, X}.
 
