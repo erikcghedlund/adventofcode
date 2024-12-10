@@ -14,16 +14,21 @@ is_changing_ltthree([H1, H2 | Tail]) when abs(H1 - H2) =< 3 -> is_changing_ltthr
 is_changing_ltthree(_) -> false.
 
 is_safe(List) -> (is_increasing(List) or is_decreasing(List)) and is_changing_ltthree(List).
-is_safe_one_rm(List) -> 
+is_safe_one_rm(List) ->
     ToTest = [help:delete_at(I, List) || {I, _} <- lists:enumerate(List)],
     lists:any(fun is_safe/1, ToTest).
 
 parse(Input) ->
     Lines = string:lexemes(Input, [$\n]),
-    IntLines = lists:map(fun (Line) -> lists:map(fun (X) -> help:fst(string:to_integer(X)) end, string:lexemes(Line, [$\s])) end, Lines),
+    IntLines = lists:map(
+        fun(Line) ->
+            lists:map(fun(X) -> help:fst(string:to_integer(X)) end, string:lexemes(Line, [$\s]))
+        end,
+        Lines
+    ),
     Safes = lists:filter(fun is_safe_one_rm/1, IntLines),
     length(Safes).
 
-main() -> 
+main() ->
     io:format("~p\n", [parse(help:stdin())]),
     halt().

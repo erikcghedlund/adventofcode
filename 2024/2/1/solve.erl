@@ -17,10 +17,15 @@ is_safe(List) -> (is_increasing(List) or is_decreasing(List)) and is_changing_lt
 
 parse(Input) ->
     Lines = string:lexemes(Input, [$\n]),
-    IntLines = lists:map(fun (Line) -> lists:map(fun (X) -> help:fst(string:to_integer(X)) end, string:lexemes(Line, [$\s])) end, Lines),
+    IntLines = lists:map(
+        fun(Line) ->
+            lists:map(fun(X) -> help:fst(string:to_integer(X)) end, string:lexemes(Line, [$\s]))
+        end,
+        Lines
+    ),
     Safes = lists:filter(fun is_safe/1, IntLines),
     length(Safes).
 
-main() -> 
+main() ->
     io:format("~p\n", [parse(help:stdin())]),
     halt().
