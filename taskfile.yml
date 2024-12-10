@@ -14,7 +14,7 @@ tasks:
   leaderboard:
     cmds:
       - |
-        curl "https://adventofcode.com/$YEAR/leaderboard/private/view/4252803?order=stars" --compressed -H "Cookie: session=$SESSION_ID" -s | pandoc -f html -t plain | pcregrep -Mo "\d+\).+" mine.txt | tr -d '*************************' | tac | fzf    
+        curl "https://adventofcode.com/$YEAR/leaderboard/private/view/4252803?order=stars" --compressed -H "Cookie: session=$SESSION_ID" -s | pandoc -f html -t plain | pcregrep -Mo "\d+\).+" | tr -d '*************************' | tac | fzf    
   solve:
     deps:
       [build-helpers, build-solve]
@@ -36,13 +36,16 @@ tasks:
     cmds:
       - |
         curl "https://adventofcode.com/$YEAR/day/$DAY/answer" --compressed -H "Cookie: session=$SESSION_ID" -s --data-raw "level=$PART&answer=$(go-task solve --silent)"
-  build-helpers:
-    sources:
-    - ./2024/helpers/help.erl
-    generates:
-    - ./2024/helpers/help.beam
+  get-plists:
+    status:
+      - test -f ./2024/helpers/plists.erl
     cmds:
-    - erlc -o ./2024/helpers/help.beam ./2024/helpers/help.erl
+      - curl https://gist.githubusercontent.com/nicklasos/c177478b972e74872b3b/raw/8f6129e2f4345a2b25c08940c937338f73c9cf1f/plists.erl -o ./2024/helpers/plists.erl
+  build-helpers:
+    deps: [get-plists]
+    dir: './2024/helpers'
+    cmds:
+    - erlc ./*.erl
   build-solve:
     sources:
     - ./$YEAR/$DAY/$PART/solve.erl
