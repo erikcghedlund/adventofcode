@@ -20,7 +20,7 @@ tasks:
       [build-helpers, build-solve]
     cmds:
       - defer: { task: cleanup }
-      - go-task --silent input | erl -pa "./$YEAR/$DAY/$PART" -pa "./2024/helpers" -noshell -s solve main
+      - go-task --silent input | time erl -pa "./$YEAR/$DAY/$PART" -pa "./2024/helpers" -noshell -s solve main
   template:
     status:
       - test -f "./$YEAR/$DAY/$PART/solve.erl"
@@ -31,7 +31,7 @@ tasks:
     deps: [build-helpers, build-solve]
     cmds:
       - defer: { task: cleanup }
-      -  erl -pa "./$YEAR/$DAY/$PART" -pa "./2024/helpers" -noshell -s solve main < "./$YEAR/$DAY/1/example.txt"
+      - time erl -pa "./$YEAR/$DAY/$PART" -pa "./2024/helpers" -noshell -s solve main < "./$YEAR/$DAY/1/example.txt"
   submit:
     cmds:
       - |
@@ -45,14 +45,14 @@ tasks:
     deps: [get-plists]
     dir: './2024/helpers'
     cmds:
-    - erlc ./*.erl
+    - erlc +o3 +native ./*.erl
   build-solve:
     sources:
     - ./$YEAR/$DAY/$PART/solve.erl
     generates:
     - ./$YEAR/$DAY/$PART/solve.beam
     cmds:
-    - erlc -o ./$YEAR/$DAY/$PART/solve.beam ./$YEAR/$DAY/$PART/solve.erl
+    - erlc +o3 +native -o ./$YEAR/$DAY/$PART/solve.beam ./$YEAR/$DAY/$PART/solve.erl
   cleanup:
     cmds:
       - rm $(find . -name '*.beam')
