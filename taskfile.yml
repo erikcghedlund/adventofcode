@@ -7,10 +7,16 @@ tasks:
     cmds:
       - |
         curl "https://adventofcode.com/$YEAR/day/$DAY" --compressed -H "Cookie: session=$SESSION_ID" | pandoc -f html -t plain
-  input:
+  get-input:
+    status:
+      - test -f "./$YEAR/$DAY/1/input.txt"
     cmds:
       - |
-        curl "https://adventofcode.com/$YEAR/day/$DAY/input" --compressed -H "Cookie: session=$SESSION_ID" -s
+        curl "https://adventofcode.com/$YEAR/day/$DAY/input" --compressed -H "Cookie: session=$SESSION_ID" -s > "./$YEAR/$DAY/1/input.txt"
+  input:
+    deps: [get-input]
+    cmds:
+      - cat "./$YEAR/$DAY/1/input.txt"
   leaderboard:
     cmds:
       - |
@@ -20,7 +26,7 @@ tasks:
       [build-helpers, build-solve]
     cmds:
       - defer: { task: cleanup }
-      - go-task --silent input | time erl -pa "./$YEAR/$DAY/$PART" -pa "./2024/helpers" -noshell -s solve main
+      - cat "./$YEAR/$DAY/1/input.txt" | time erl -pa "./$YEAR/$DAY/$PART" -pa "./2024/helpers" -noshell -s solve main
   template:
     status:
       - test -f "./$YEAR/$DAY/$PART/solve.erl"
