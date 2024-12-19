@@ -28,7 +28,7 @@ tasks:
       - mkdir -p "./$YEAR/$DAY/$PART"
       - echo '-module(solve).\n-export([main/0]).\n' > "./$YEAR/$DAY/$PART/solve.erl"
   test-example:
-    deps: [build-helpers, build-solve]
+    deps: [build-helpers, build-test]
     cmds:
       - defer: { task: cleanup }
       - time erl -pa "./$YEAR/$DAY/$PART" -pa "./2024/helpers" -noshell -s solve main < "./$YEAR/$DAY/1/example.txt"
@@ -53,6 +53,13 @@ tasks:
     - ./$YEAR/$DAY/$PART/solve.beam
     cmds:
     - erlc +o3 +native -o ./$YEAR/$DAY/$PART/solve.beam ./$YEAR/$DAY/$PART/solve.erl
+  build-test:
+    sources:
+    - ./$YEAR/$DAY/$PART/solve.erl
+    generates:
+    - ./$YEAR/$DAY/$PART/solve.beam
+    cmds:
+    - erlc -DTEST -o ./$YEAR/$DAY/$PART/solve.beam ./$YEAR/$DAY/$PART/solve.erl
   cleanup:
     cmds:
       - rm $(find . -name '*.beam')
