@@ -1,6 +1,5 @@
 -module(solve).
 -export([main/0]).
--define(MEMOIZED,).
 -define(MODNUM, 16777216).
 
 mix(Secret, Val) -> Secret bxor Val.
@@ -11,13 +10,11 @@ step(1, Secret) -> prune(mix(Secret, Secret * 64));
 step(2, Secret) -> prune(mix(Secret, Secret div 32));
 step(3, Secret) -> prune(mix(Secret, Secret * 2048)).
 
-next_random(Secret) -> lists:foldl(fun (I, Acc) -> step(I, Acc) end, Secret, [1, 2, 3]).
+next_random(Secret) -> lists:foldl(fun(I, Acc) -> step(I, Acc) end, Secret, [1, 2, 3]).
 
-iterate(Secret, N) -> lists:foldl(fun (_, Acc) -> next_random(Acc) end, Secret, lists:seq(1, N)).
+iterate(Secret, N) -> lists:foldl(fun(_, Acc) -> next_random(Acc) end, Secret, lists:seq(1, N)).
 
--ifndef(PARALLEL).
-solve(Seeds) -> lists:sum(lists:map(fun (Secret) -> iterate(Secret, 2000) end, Seeds)).
--endif.
+solve(Seeds) -> lists:sum(lists:map(fun(Secret) -> iterate(Secret, 2000) end, Seeds)).
 
 main() ->
     Lines = string:lexemes(lists:flatten(help:stdin()), [$\n]),
